@@ -1,0 +1,10 @@
+<%- include('layouts/base', {
+  title: 'Rappel de paiement de salaire',
+  header: 'Rappel de paiement de salaire',
+  body: `
+    <p>Bonjour chers administrateurs,</p>
+    <p>Ceci est un rappel concernant le paiement du salaire de l’employé <strong>${firstName} ${lastName}</strong> pour la période ${nextPayDate}.</p>
+    <p>Veuillez vous assurer que le paiement est effectué avant la date limite fixée : <strong>${nextPayDate}</strong>.</p>
+    <p>Cordialement,<br>L’équipe ADRS</p>
+  `
+}) %>

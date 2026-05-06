@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %> - Plateforme ADRS</title>
+  <style>
+    body { font-family:'Segoe UI', Arial, sans-serif; background:#f5f5f5; margin:0; padding:0; }
+    .email-wrapper { max-width:600px; margin:20px auto; background:#fff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .email-header { background:#004080; color:#fff; text-align:center; padding:20px; }
+    .email-body { padding:20px; color:#333; }
+    .email-body p { margin:10px 0; }
+    .email-footer { text-align:center; font-size:14px; color:#777; padding:15px; border-top:1px solid #ddd; }
+    .email-footer a { color:#004080; text-decoration:none; }
+    @media (max-width:600px) {
+      .email-wrapper { margin:10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-header">
+      <h1><%= header %></h1>
+    </div>
+    <div class="email-body">
+      <!-- Injected content -->
+      <%- body %>
+    </div>
+    <div class="email-footer">
+      Pour toute question, contactez-nous à 
+      <a href="mailto:adrs-mali@gmail.com">adrs-mali@gmail.com</a>
+    </div>
+  </div>
+</body>
+</html>

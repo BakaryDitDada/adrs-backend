@@ -1,0 +1,17 @@
+<%- include('layouts/base', {
+  title: 'Nouvelle tâche assignée',
+  header: 'Nouvelle tâche assignée',
+  body: `
+    <p>Bonjour ${employeeName},</p>
+    <p>Vous avez reçu une nouvelle tâche sur la <strong>Plateforme ADRS</strong>.</p>
+    <div style="background:#f0f8ff;border:1px solid #004080;padding:15px;border-radius:6px;margin:15px 0;">
+      <p><strong>Titre :</strong> ${task.title}</p>
+      <p><strong>Description :</strong> ${task.description}</p>
+      <p><strong>Date de début :</strong> ${task.startDate}</p>
+      <p><strong>Date d’échéance :</strong> ${task.dueDate}</p>
+      <p><strong>Priorité :</strong> ${task.priority}</p>
+    </div>
+    <p>Veuillez vous connecter à la plateforme pour consulter les détails et mettre à jour votre avancement.</p>
+    <p>Cordialement,<br>L’équipe ADRS</p>
+  `
+}) %>
