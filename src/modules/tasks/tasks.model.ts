@@ -19,7 +19,7 @@ type TaskType = {
   dueDate?: Date;
   projectId?: Types.ObjectId;
   completionDate?: Date;
-  categories: Types.ObjectId[];
+  categories?: Types.ObjectId[];
   notes: string;
   attachments?: {
     filename: string;

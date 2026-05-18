@@ -16,6 +16,7 @@ export interface IPayroll extends Document {
   paymentMethod: 'Banque' | 'Espèces' | 'Chèque';
   transactionReference?: string;      // bank transaction ID or check number
   notes?: string;
+  
   createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;

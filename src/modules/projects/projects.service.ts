@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { PopulateOptions, Types } from 'mongoose';
 import { ProjectRepository } from './projects.repository.js';
 import { DocumentService } from '../documents/docs.service.js';
 import { ProjectCreateInput, ProjectUpdateInput, ProjectFilter } from './projects.types.js';
@@ -49,7 +49,7 @@ export class ProjectService extends BaseService<IProject> {
       if (toDate) query.startDate.$lte = toDate;
     }
     // if (fromDate) query.startDate = { $gte: fromDate };
-    // if (toDate) query.startDate = { $lte: toDate };
+    // if (toDate) query.startDate = { $lte: toDate }; 
 
     const skip = (page - 1) * limit;
 
@@ -65,6 +65,27 @@ export class ProjectService extends BaseService<IProject> {
 
     return { data, total, page, limit, pages: Math.ceil(total / limit) };
 
+  }
+
+  async listProjects(
+    filter: any = {},
+    pagination: { page?: number; limit?: number; sort?: string; search?: string }
+  ) {
+    // Define populate options PROGRAMMATICALLY (not from query string)
+    const populateOptions: (string | PopulateOptions)[] = [
+      { path: "manager", select: "firstName lastName employeeId" },
+      { path: "createdBy", select: "username email" }
+    ];
+
+    // Use base repository's findAll which supports filter, pagination, sort, search, populate
+    return this.repo.findAll(filter, {
+      page: pagination.page,
+      limit: pagination.limit,
+      sort: pagination.sort,
+      search: pagination.search,
+      searchFields: ["name", "description", "code"],
+      populate: populateOptions,
+    });
   }
 
   async getProjectById(id: string): Promise<IProject> {

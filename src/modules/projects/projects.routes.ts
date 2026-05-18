@@ -25,7 +25,8 @@ projectsRouter.use(restrictTo('admin', 'hr', 'manager', 'user'));
 projectsRouter.post('/create-many', validateProjectsBulkCreate, controller.createMany);
 projectsRouter.post('/', validateProjectCreate, controller.create);
 
-projectsRouter.get('/', controller.getAll); // Get all projects (with filters/pagination)
+// projectsRouter.get('/', controller.getAll); // Get all projects (with filters/pagination)
+projectsRouter.get('/', controller.list);
 projectsRouter.get('/:id', controller.getOne); // Get single project by ID
 
 projectsRouter.patch('/update-many', validateProjectsBulkUpdate, controller.updateMany);

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ProjectService } from './projects.service.js';
 import catchAsync from '../../utils/catchAsync.js';
 import { Types } from 'mongoose';
@@ -78,6 +78,30 @@ export class ProjectController {
       },
     });
   }); 
+
+  list = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    const sort = req.query.sort as string | undefined;
+    const search = req.query.search as string | undefined;
+
+    // Filters from query (e.g., ?department=Engineering)
+    const filters = { ...req.query };
+    const excluded = ["page", "limit", "sort", "search"];
+    excluded.forEach(key => delete filters[key]);
+
+    const result = await this.service.listProjects(filters, { page, limit, sort, search });
+
+    res.status(200).json({
+      status: "success",
+      results: result.data.length,
+
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      data: result.data,
+    });
+  });
 
   getOne = catchAsync(async (req: Request | any, res: Response) => {
     const project = await this.service.getProjectById(req.params.id);

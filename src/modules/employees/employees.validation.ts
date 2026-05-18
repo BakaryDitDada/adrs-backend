@@ -9,7 +9,7 @@ export const employeeCreateSchema = z.object({
   department: z.string().min(1, "Department required"),
   hireDate: z.coerce.date(), // handles string, Date, or number
   gender: z.enum(["Homme", "Femme"]).optional(),
-  maritalStatus: z.enum(["Célébataire", "Marié(e)", "Divorcé(e)", "Veuf(ve)"]).optional(),
+  maritalStatus: z.enum(["Célibataire", "Marié(e)", "Divorcé(e)", "Veuf(ve)"]).optional(),
   nationalId: z.string().optional(),
   contractType: z.enum(["CDI", "CDD", "Stagiaire", "Consultant", "Fonctionnaire"]),
   contractEndDate: z.string().optional(),

@@ -43,7 +43,9 @@ export class TaskService {
   // }
 
   async createTask(data: TaskCreateInput): Promise<TTask> {
+    // return console.log("Data (createTask) ::: ", data);
     const task = await this.taskRepo.create(data);
+
 
     // If task belongs to a project, add task ID to project's tasks array
     if (data.projectId) {

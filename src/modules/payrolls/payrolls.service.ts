@@ -1,4 +1,3 @@
-// src/modules/payroll/payroll.service.ts
 import { Types } from 'mongoose';
 import { PayrollRepository } from './payrolls.repository.js';
 import { EmployeeRepository } from '../employees/employees.repository.js'; // assuming employee module exists
@@ -90,7 +89,7 @@ export class PayrollService {
         grossPay,
         deductions,
         netPay,
-        status: 'pending',
+        status: 'En attente',
         paymentMethod: customData?.[emp.employeeId]?.paymentMethod || (emp.salaryInfo.bankAccount ? 'bank' : 'cash'),
         transactionReference: customData?.[emp.employeeId]?.transactionReference,
         notes: customData?.[emp.employeeId]?.notes,
@@ -154,9 +153,9 @@ export class PayrollService {
     if (!payroll) throw new AppError('Payroll record not found', 404);
 
     // If status changed to 'paid' and paymentDate provided, update employee's nextPayDate
-    if (updateData.status === 'paid' && updateData.paymentDate) {
+    if (updateData.status === 'Payé' && updateData.paymentDate) {
       const employee = await this.employeeRepo.findById(payroll.employeeId.toString());
-      if (employee && employee.employmentStatus === 'active') {
+      if (employee && employee.employmentStatus === 'En activité') {
         const nextDate = calculateNextPayDate(updateData.paymentDate, employee.salaryInfo.payFrequency);
         if (!employee.nextPayDate || nextDate > employee.nextPayDate) {
           await this.employeeRepo.updateById(employee._id.toString(), { nextPayDate: nextDate });
@@ -219,7 +218,7 @@ export class PayrollService {
     const cancellableIds: string[] = [];
     const nonCancellable: { id: string; status: string }[] = [];
     for (const payroll of payrolls.data) {
-      if (payroll.status === 'pending') {
+      if (payroll.status === 'En attente') {
         cancellableIds.push(payroll._id.toString());
       } else {
         nonCancellable.push({ id: payroll._id.toString(), status: payroll.status });

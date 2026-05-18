@@ -180,7 +180,9 @@ export class LeavesService {
 
   async updateLeaveRequest(id: string, updateData: LeaveUpdateInput, userId: string, userRole: string): Promise<ILeave> {
     const leave = await this.leaveRepo.findById(id);
+
     if (!leave) throw new AppError('Leave request not found', 404);
+
     if (leave.status !== 'En attente') {
       throw new AppError(`Cannot update ${leave.status} request`, 400);
     }
@@ -374,7 +376,8 @@ export class LeavesService {
       throw new AppError("No pending leave requests eligible for deletion", 400);
     }
 
-    await this.leaveRepo.deleteMany({ _id: { $in: pendingIds } });
+    await this.leaveRepo.deleteMany({ _id: { $in: ids } });
+    // await this.leaveRepo.deleteMany({ _id: { $in: pendingIds } });
   }
 
 }

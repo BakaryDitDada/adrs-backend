@@ -5,7 +5,7 @@ const authRouter: express.Router = express.Router();
 
 authRouter.post('/register', controller.signup);
 authRouter.post('/signin', controller.login);
-authRouter.post('/signout', controller.logout);
+authRouter.get('/signout', controller.logout);
 authRouter.post('/activate', controller.saveUser);
 
 authRouter.get('/refresh', controller.refresh);

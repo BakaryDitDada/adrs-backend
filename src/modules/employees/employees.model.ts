@@ -12,7 +12,7 @@ export interface IEmployee extends Document {
   // gender?: 'Male' | 'Female';
   gender?: 'Homme' | 'Femme';
   // maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
-  maritalStatus?: 'Célébataire' | 'Marié(e)' | 'Divorcé(e)' | 'Veuf(ve)';
+  maritalStatus?: 'Célibataire' | 'Marié(e)' | 'Divorcé(e)' | 'Veuf(ve)';
   nationalId?: string;
   address?: {
     street: string;
@@ -79,7 +79,7 @@ const employeeSchema = new Schema<IEmployee>(
     lastName: { type: String, required: true, trim: true },
     dateOfBirth: Date,
     gender: { type: String, enum: ['Homme', 'Femme'] },
-    maritalStatus: { type: String, enum: ['Célébataire', 'Marié(e)', 'Divorcé(e)', 'Veuf(ve)'] },
+    maritalStatus: { type: String, enum: ['Célibataire', 'Marié(e)', 'Divorcé(e)', 'Veuf(ve)'] },
     nationalId: { type: String, sparse: true },
     address: {
       street: String,

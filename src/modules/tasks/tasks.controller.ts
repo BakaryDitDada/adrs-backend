@@ -10,12 +10,13 @@ export class TaskController {
     const taskData = {
       ...req.body,
       assignedTo: req.body.assignedTo?.map((id: string) => new Types.ObjectId(id)),
-      categories: req.body.categories?.split(',').map((id: string) => new Types.ObjectId(id)),
+      categories: req.body.categories ? req.body.categories?.split(',').map((id: string) => new Types.ObjectId(id)) : undefined,
       projectId: req.body.projectId ? new Types.ObjectId(req.body.projectId) : undefined,
       startDate: new Date(req.body.startDate),
       dueDate: req.body.dueDate ? new Date(req.body.dueDate) : undefined,
       createdBy: req.user._id,
     };
+
     const task = await this.service.createTask(taskData);
     res.status(201).json({ status: 'success', data: { task } });
   });
