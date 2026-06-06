@@ -130,7 +130,7 @@ export class TaskController {
 
   getById = catchAsync(async (req: Request | any, res: Response) => {
     const task = await this.service.getTaskById(req.params.id);
-    res.status(200).json({ status: 'success', data: { task } });
+    res.status(200).json({ status: 'success', data: task });
   });
 
   update = catchAsync(async (req: Request | any, res: Response) => {

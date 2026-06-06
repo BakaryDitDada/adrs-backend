@@ -168,7 +168,14 @@ export class TaskService {
   async getTaskById(id: string): Promise<TTask> {
     const task = await this.taskRepo.findById(id);
     if (!task) throw new AppError('Task not found', 404);
-    await this.taskRepo.model.populate(task, 'assignedTo projectId categories attachments createdBy');
+    await this.taskRepo.model.populate(task, [
+        { path: "assignedTo", select: "firstName lastName workEmail" },
+        { path: "projectId", select: "name code status" },
+        { path: "attachments", select: "filename originalName size path " },
+        { path: "createdBy", select: "username email" }
+      ],
+    );
+    // await this.taskRepo.model.populate(task, 'assignedTo projectId categories attachments createdBy');
     return task;
   }
 
