@@ -3,7 +3,7 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { IAiProvider } from './base.provider.js';
 
 export class GeminiProvider implements IAiProvider {
-  private model: ChatGoogleGenerativeAI;
+  private model: ChatGoogleGenerativeAI; 
 
   constructor(apiKey: string, modelName = "gemini-2.5-flash", temperature = 0) {
   // constructor(apiKey: string, modelName = "gemini-2.0-flash-exp", temperature = 0) {
