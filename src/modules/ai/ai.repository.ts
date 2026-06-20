@@ -1,4 +1,5 @@
 // import { BaseRepository } from '../base/base.repository.js';
+import { BaseRepository } from '../base/base.repository.js';
 import { AiConversation, IAiConversation, AiReport, IAiReport } from './ai.model.js';
 import { Types } from 'mongoose';
 
@@ -20,9 +21,14 @@ export class AiRepository {
 
   async getUserConversations(userId: string, limit = 20): Promise<IAiConversation[]> {
     return AiConversation.find({ userId: new Types.ObjectId(userId) })
-      .sort({ updatedAt: -1 })
+      .sort({ updateAt: -1 })
       .limit(limit)
       .exec();
+  }
+
+  async deleteConversationById(id: string): Promise<boolean> {
+    const result = await AiConversation.findByIdAndDelete(id).exec();
+    return result !== null;
   }
 
   // Reports
@@ -40,5 +46,10 @@ export class AiRepository {
       .sort({ createdAt: -1 })
       .limit(limit)
       .exec();
+  }
+
+  async deleteReportById(id: string): Promise<boolean> {
+    const result = await AiReport.findByIdAndDelete(id).exec();
+    return result !== null;
   }
 }

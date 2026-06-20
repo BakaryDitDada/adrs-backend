@@ -11,8 +11,9 @@ export class OllamaProvider implements IAiProvider {
   ) {
     this.model = new ChatOllama({
       model: modelName,
+      "think": false,
       temperature,
-      baseUrl: "http://localhost:11434"
+      baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
     });
   }
 

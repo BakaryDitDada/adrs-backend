@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { AiService } from './ai.service.js';
 import catchAsync from '../../utils/catchAsync.js';
 // import AppError from '../../utils/appError.js';
@@ -13,6 +13,107 @@ export class AiController {
     const result = await this.service.sendMessage(userId, conversationId, message, userRole);
     res.status(200).json({ status: 'success', data: result });
   });
+
+  streamChat = async (
+    req: Request | any,
+    res: Response
+  ) => {
+
+    try {
+
+      res.setHeader(
+        "Content-Type",
+        "text/event-stream"
+      );
+
+      res.setHeader(
+        "Cache-Control",
+        "no-cache"
+      );
+
+      res.setHeader(
+        "Connection",
+        "keep-alive"
+      );
+
+      res.flushHeaders();
+
+            res.write(
+        `data: ${JSON.stringify({
+          type: "connected"
+        })}\n\n`
+      );
+
+      req.on(
+        "close",
+        () => {
+
+          console.log(
+            "Chat stream closed"
+          );
+
+          if (
+            !res.writableEnded
+          ) {
+            res.end();
+          }
+        }
+      );
+
+      const stream =
+        this.service.sendMessageStream(
+          req.user.id,
+          req.body.conversationId,
+          req.body.message,
+          req.user.role
+        );
+
+      for await (const event of stream) {
+        console.log("Stream Event::: ", event);
+        res.write(
+          `data: ${JSON.stringify(event)}\n\n`
+        );
+      }
+
+      res.end();
+
+      return;
+
+    } catch (error: any) {
+
+      console.error(
+        error
+      );
+
+      if (
+        !res.headersSent
+      ) {
+
+        return res.status(500).json({
+          status: "error",
+          message:
+            error.message
+        });
+      }
+
+      if (
+        !res.writableEnded
+      ) {
+
+        res.write(
+          `data: ${JSON.stringify({
+            type: "error",
+            content:
+              error.message
+          })}\n\n`
+        );
+
+        res.end();
+      }
+
+      return;
+    }
+  };
 
   getConversations = catchAsync(async (req: Request | any, res: Response) => {
     const userId = req.user._id;
@@ -70,10 +171,155 @@ export class AiController {
 
     // res.status(200).json({ status: 'success', data: { manualReport } });
   });
+  
+  deleteConversation = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+    await this.service.deleteConversation(req.params.id as string);
+    res.status(204).send();
+  });
+
+  /*
+   @Post("/reports/stream")
+  */
+  // streamReport = async (
+  //   req: Request | any,
+  //   res: Response
+  // ) => {
+
+  //   try {
+
+  //     res.setHeader(
+  //       "Content-Type",
+  //       "text/event-stream"
+  //     );
+
+  //     res.setHeader(
+  //       "Cache-Control",
+  //       "no-cache"
+  //     );
+
+  //     res.setHeader(
+  //       "Connection",
+  //       "keep-alive"
+  //     );
+
+  //     res.flushHeaders();
+
+  //     const stream =
+  //       this.service
+  //         .generateFlexibleReportStream(
+  //           req.user._id,
+  //           req.user.role,
+  //           req.body.query
+  //         );
+
+  //     for await (
+  //       const event of stream
+  //     ) {
+
+  //       console.log("Stream Event::: ", event)
+
+  //       res.write(
+  //         `data: ${JSON.stringify(
+  //           event
+  //         )}\n\n`
+  //       );
+  //     }
+
+  //     res.end();
+
+  //   } catch(error: any) {
+
+  //     console.error(error);
+
+  //     if (!res.writableEnded) {
+
+  //       res.write(
+  //         `data: ${JSON.stringify({
+  //           type: "error",
+  //           message:
+  //             error.message
+  //         })}\n\n`
+  //       );
+
+  //       res.end();
+  //     }
+  //   }
+  // };
+
+  streamReport = async (
+    req: Request | any,
+    res: Response
+  ) => {
+
+    try {
+
+      res.setHeader(
+        "Content-Type",
+        "text/event-stream"
+      );
+
+      res.setHeader(
+        "Cache-Control",
+        "no-cache"
+      );
+
+      res.setHeader(
+        "Connection",
+        "keep-alive"
+      );
+
+      res.flushHeaders();
+
+      res.write(
+        `data: ${JSON.stringify({
+          type: "connected"
+        })}\n\n`
+      );
+
+      const stream =
+        this.service
+          .generateFlexibleReportStream(
+            req.user.id,
+            req.user.role,
+            req.body.query
+          );
+
+      for await (const event of stream) {
+        console.log("Stream Event::: ", event);
+        res.write(
+          `data: ${JSON.stringify(event)}\n\n`
+        );
+      }
+
+      res.end();
+
+    } catch (error: any) {
+
+      console.error(error);
+
+      if (!res.writableEnded) {
+
+        res.write(
+          `data: ${JSON.stringify({
+            type: "error",
+            message:
+              error.message
+          })}\n\n`
+        );
+
+        res.end();
+      }
+    }
+  };
 
   getReports = catchAsync(async (req: Request | any, res: Response) => {
     const userId = req.user._id;
     const reports = await this.service.getUserReports(userId);
     res.status(200).json({ status: 'success', data: { reports } });
+  });
+
+  deleteReport = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+    await this.service.deleteReport(req.params.id as string);
+    res.status(204).send();
   });
 }
