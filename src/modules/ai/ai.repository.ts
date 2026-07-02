@@ -1,5 +1,5 @@
 // import { BaseRepository } from '../base/base.repository.js';
-import { BaseRepository } from '../base/base.repository.js';
+// import { BaseRepository } from '../base/base.repository.js';
 import { AiConversation, IAiConversation, AiReport, IAiReport } from './ai.model.js';
 import { Types } from 'mongoose';
 

@@ -142,7 +142,7 @@ export class LeavesService {
       populate: populateOptions,
     });
   }
-
+ 
   async getLeaveById(id: string): Promise<ILeave> {
     const leave = await this.leaveRepo.findById(id);
     if (!leave) throw new AppError('Leave request not found', 404);

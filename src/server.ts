@@ -1,11 +1,10 @@
+import "./init-patch.js";
 import "dotenv/config.js";
 
 import app from "./app.js";
 import mongoose from "mongoose";
 import { connectDB } from "./config/database.js";
 import logger from "./utils/logger.js";
-// import { initJobs } from "./jobs/index.js";
-
 
 const PORT = process.env.PORT || 5000;
 
@@ -29,16 +28,6 @@ const startServer = async () => {
   } 
 };
 
-// Handle graceful shutdown
-// process.on('SIGTERM', () => {
-//   logger.info('SIGTERM received. Shutting down gracefully...');
-//   process.exit(0);
-// });
-
-// process.on('SIGINT', () => {
-//   logger.info('SIGINT received. Shutting down gracefully...');
-//   process.exit(0);
-// });
 const shutdown = async (signal: string) => {
   logger.info(`${signal} received. Shutting down gracefully...`);
 

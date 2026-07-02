@@ -19,26 +19,20 @@ export class AiController {
     res: Response
   ) => {
 
+    // return console.log("Req.body ::: ", req.body);
+    
     try {
 
-      res.setHeader(
-        "Content-Type",
-        "text/event-stream"
-      );
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
 
-      res.setHeader(
-        "Cache-Control",
-        "no-cache"
-      );
-
-      res.setHeader(
-        "Connection",
-        "keep-alive"
-      );
+      // ADD THIS LINE: Tells Nginx / proxies not to buffer this response
+      res.setHeader("X-Accel-Buffering", "no");
 
       res.flushHeaders();
 
-            res.write(
+      res.write(
         `data: ${JSON.stringify({
           type: "connected"
         })}\n\n`
@@ -69,10 +63,16 @@ export class AiController {
         );
 
       for await (const event of stream) {
-        console.log("Stream Event::: ", event);
+        // console.log("Stream Event::: ", event);
+        console.log(`[${new Date().toISOString()}] Stream Event:::`, event);
         res.write(
           `data: ${JSON.stringify(event)}\n\n`
         );
+
+        // ADD THIS LINE: Force compression middleware to flush out the token immediately
+        if (typeof (res as any).flush === "function") {
+          (res as any).flush();
+        }
       }
 
       res.end();

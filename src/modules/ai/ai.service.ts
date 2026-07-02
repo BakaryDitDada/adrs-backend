@@ -35,6 +35,37 @@ export class AiService {
     }, 60_000);
   }
 
+  /**
+   * Combined Security & Relevance Gateway
+   * 1. Filters tools programmatically by User Role (Security)
+   * 2. Narrows down the remaining tools by prompt intent (Token Optimization)
+   */
+  private getSecuredRelevantTools(userRole: string, message: string): any[] {
+    // 1. Fetch every tool registered in the application
+    const allTools = getAllTools();
+    
+    // 2. SECURITY LAYER: Strip away unauthorized assets immediately
+    let authorizedTools = allTools;
+    if (userRole !== "admin") {
+      authorizedTools = allTools.filter(tool => 
+        !tool.name.includes("analytics") && 
+        !tool.name.includes("stats") && 
+        !tool.name.includes("dashboard")
+      );
+    }
+
+    // 3. RELEVANCE LAYER: Run your matching utility against the SAFE subset only
+    const targetedTools = getRelevantTools(message, authorizedTools);
+
+    // Safety Fallback: If relevance filtering was too aggressive and returned 0 tools, 
+    // fall back to supplying the full authorized list so the LLM doesn't break.
+    if (targetedTools.length === 0) {
+      return authorizedTools;
+    }
+
+    return targetedTools;
+  }
+
   constructor(
     aiRepo: AiRepository,
     private model: BaseChatModel,
@@ -121,7 +152,7 @@ export class AiService {
         if (response.tool_calls && response.tool_calls.length > 0) {
           const tools = getAllTools();
           for (const toolCall of response.tool_calls) {
-            const tool = tools.find(t => t.name === toolCall.name);
+            const tool: any = tools.find(t => t.name === toolCall.name);
             if (tool) {
               // Check tool result cache
               const toolCacheKey = `${toolCall.name}:${JSON.stringify(toolCall.args)}`;
@@ -179,6 +210,258 @@ export class AiService {
 
   // ========== Complete sendMessageStream Method (with tool calling loop) ==========
   async *sendMessageStream(
+    userId: string,
+    conversationId: string | null,
+    message: string,
+    userRole: string
+  ): AsyncGenerator<StreamEvent> {
+
+    try {
+      // 1. Check normalization cache to avoid unnecessary LLM compute cycles
+      const normalizedMessage = message
+        .trim()
+        .toLowerCase()
+        .replace(/[?.!,]/g, "");
+
+      const cacheKey = `${userId}:${userRole}:${normalizedMessage}`;
+      const cached = this.responseCache.get(cacheKey);
+
+      if (cached && (Date.now() - cached.timestamp < this.CACHE_TTL)) {
+        yield { type: "token", content: cached.reply };
+        yield { type: "done" };
+        return;
+      }
+
+      // 2. Fetch or initialize the conversation history
+      let conversation;
+      if (conversationId) {
+        conversation = await this.aiRepo.getConversation(conversationId, userId);
+        if (!conversation) {
+          yield { type: "error", content: "Conversation non trouvée" };
+          return;
+        }
+      } else {
+        conversation = await this.aiRepo.createConversation(userId);
+        yield {
+          type: "conversation",
+          conversationId: conversation._id.toString()
+        };
+      }
+
+      // 3. Persist the user message to the database immediately
+      await this.aiRepo.addMessage(conversation._id.toString(), "user", message);
+      yield { type: "thinking", content: "Analyse de la demande..." };
+
+      // 4. Provision secure, relevant tools and bind them to the runtime instance
+      const runtimeTools = this.getSecuredRelevantTools(userRole, message);
+      const securedModel = (this.model as any).bindTools(runtimeTools);
+
+      // 5. Construct the contextual memory history array (Max 6 messages)
+      const MAX_HISTORY_MESSAGES = 6;
+      const recentMessages = conversation.messages.slice(-MAX_HISTORY_MESSAGES);
+      
+      const systemPrompt = getSystemPrompt(userRole) + `
+        Tu es l'assistant ADRS.
+        Règles:
+        - Utilise uniquement les outils nécessaires.
+        - N'appelle jamais plusieurs outils si un seul suffit.
+        - Si la réponse est déjà dans l'historique, réponds directement.
+        - Après récupération des données, réponds immédiatement.
+        - Ne montre jamais ton raisonnement.
+        - Ne montre jamais <think>.
+      `;
+
+      let currentMessages: any[] = [
+        new SystemMessage(systemPrompt),
+        ...recentMessages.map(msg => {
+          if (msg.role === "user") return new HumanMessage(msg.content);
+          if (msg.role === "assistant") return new AIMessage(msg.content);
+          return new SystemMessage(msg.content);
+        }),
+        new HumanMessage(message)
+      ];
+
+      // 6. Execute the execution loop (ReAct architecture)
+      const MAX_ITERATIONS = 5;
+      let iterations = 0;
+
+      while (iterations++ < MAX_ITERATIONS) {
+        const responseStream = await securedModel.stream(currentMessages);
+
+        let completeAIMessage: any = null;
+        let collectedContent = "";
+        let hasStreamedThinkingLabel = false;
+
+        // STREAMING FILTER STATE VARIABLES
+        let inThinkBlock = false;
+        let textBuffer = "";
+
+        for await (const chunk of responseStream) {
+          // Accumulate incoming streaming deltas into the core LangChain Message structure
+          if (!completeAIMessage) {
+            completeAIMessage = chunk;
+          } else {
+            completeAIMessage = completeAIMessage.concat(chunk);
+          }
+
+          // Case A: The LLM is actively outputting conversational text directly
+          if (chunk.content && (!completeAIMessage.tool_calls || completeAIMessage.tool_calls.length === 0)) {
+            if (!hasStreamedThinkingLabel) {
+              yield { type: "thinking", content: "Génération de la réponse..." };
+              hasStreamedThinkingLabel = true;
+            }
+
+            textBuffer += chunk.content;
+
+            // Process buffer character segments sequentially to detect/suppress tags
+            while (textBuffer.length > 0) {
+              if (inThinkBlock) {
+                const endIdx = textBuffer.indexOf("</think>");
+                if (endIdx !== -1) {
+                  // Found the end of reasoning. Slice past it and resume normal output
+                  textBuffer = textBuffer.slice(endIdx + 8);
+                  inThinkBlock = false;
+                } else {
+                  // Still inside a think block. Check if the buffer ends with a partial "</think"
+                  let partialMatch = false;
+                  const closingTag = "</think>";
+                  for (let i = closingTag.length - 1; i > 0; i--) {
+                    if (textBuffer.endsWith(closingTag.slice(0, i))) {
+                      textBuffer = textBuffer.slice(-i); // Keep only the partial match segment
+                      partialMatch = true;
+                      break;
+                    }
+                  }
+                  if (!partialMatch) {
+                    textBuffer = ""; // Discard everything else safely
+                  }
+                  break; // Break loop to await more streaming chunks
+                }
+              } else {
+                // Outside of a think block
+                const startIdx = textBuffer.indexOf("<think>");
+                if (startIdx !== -1) {
+                  // Found a reasoning start block. Yield everything prior to it
+                  const contentToYield = textBuffer.slice(0, startIdx);
+                  if (contentToYield) {
+                    collectedContent += contentToYield;
+                    yield { type: "token", content: contentToYield };
+                  }
+                  textBuffer = textBuffer.slice(startIdx + 7);
+                  inThinkBlock = true;
+                } else {
+                  // No complete opening tag found. Safeguard against split tags like "<th" at the end of a chunk
+                  let partialMatch = false;
+                  const openingTag = "<think>";
+                  for (let i = openingTag.length - 1; i > 0; i--) {
+                    if (textBuffer.endsWith(openingTag.slice(0, i))) {
+                      const safeToYield = textBuffer.slice(0, -i);
+                      if (safeToYield) {
+                        collectedContent += safeToYield;
+                        yield { type: "token", content: safeToYield };
+                      }
+                      textBuffer = textBuffer.slice(-i); // Retain partial tag in buffer
+                      partialMatch = true;
+                      break;
+                    }
+                  }
+                  if (!partialMatch) {
+                    // Buffer is clean and free of tags. Safe to flush completely to client UI
+                    collectedContent += textBuffer;
+                    yield { type: "token", content: textBuffer };
+                    textBuffer = "";
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        // Append the final compiled message object into historical context array
+        currentMessages.push(completeAIMessage);
+
+        // Case B: No tool processing needed – generation complete!
+        if (!completeAIMessage.tool_calls || completeAIMessage.tool_calls.length === 0) {
+          this.responseCache.set(cacheKey, {
+            reply: collectedContent,
+            timestamp: Date.now()
+          });
+
+          await this.aiRepo.addMessage(
+            conversation._id.toString(),
+            "assistant",
+            collectedContent
+          );
+
+          yield { type: "done" };
+          return;
+        }
+
+        // Case C: The LLM requested execution of one or multiple tools
+        yield { type: "thinking", content: "Consultation des données..." };
+
+        for (const toolCall of completeAIMessage.tool_calls) {
+          const tool: any = runtimeTools.find(t => t.name === toolCall.name);
+
+          if (!tool) {
+            currentMessages.push(
+              new ToolMessage({
+                content: `Erreur: L'accès à l'outil '${toolCall.name}' vous est refusé.`,
+                tool_call_id: toolCall.id
+              })
+            );
+            continue;
+          }
+
+          try {
+            const toolCacheKey = `${toolCall.name}:${JSON.stringify(toolCall.args)}`;
+            const cachedTool = this.toolResultCache.get(toolCacheKey);
+            
+            let result: string;
+
+            if (cachedTool && (Date.now() - cachedTool.timestamp < this.CACHE_TTL)) {
+              result = cachedTool.result;
+            } else {
+              const rawResult = await tool.invoke(toolCall.args);
+              result = typeof rawResult === "string" ? rawResult : JSON.stringify(rawResult);
+              
+              this.toolResultCache.set(toolCacheKey, {
+                result,
+                timestamp: Date.now()
+              });
+            }
+
+            currentMessages.push(
+              new ToolMessage({
+                content: result,
+                tool_call_id: toolCall.id
+              })
+            );
+
+          } catch (error: any) {
+            currentMessages.push(
+              new ToolMessage({
+                content: `Erreur exécutant l'outil ${toolCall.name}: ${error.message}`,
+                tool_call_id: toolCall.id
+              })
+            );
+          }
+        }
+      }
+
+      yield { type: "error", content: "Nombre maximal d'itérations atteint." };
+
+    } catch (error: any) {
+      console.error("CHAT STREAM ERROR:", error);
+      yield {
+        type: "error",
+        content: error?.message ?? "Erreur inconnue"
+      };
+    }
+  }
+
+  async *sendMessageStreamOld(
     userId: string,
     conversationId: string | null,
     message: string,
@@ -276,7 +559,7 @@ export class AiService {
       };
 
       // const tools = getAllTools();
-      const tools = getRelevantTools(message);
+      const tools = this.getSecuredRelevantTools(userRole, message);
 
       // console.log(
       //   "TOOLS COUNT:",
@@ -463,12 +746,7 @@ export class AiService {
         //
         for (const toolCall of response.tool_calls) {
 
-          const tool =
-            tools.find(
-              t =>
-                t.name ===
-                toolCall.name
-            );
+          const tool: any = tools.find(t => t.name === toolCall.name);
 
           if (!tool) {
             continue;
@@ -602,7 +880,7 @@ export class AiService {
       messages.push(response);
       if (response.tool_calls && response.tool_calls.length > 0) {
         for (const toolCall of response.tool_calls) {
-          const tool = tools.find(t => t.name === toolCall.name);
+          const tool: any = tools.find(t => t.name === toolCall.name);
           if (tool) {
             try {
               const result: any = await tool.invoke(toolCall.args);
@@ -727,12 +1005,7 @@ export class AiService {
         //
         for (const toolCall of response.tool_calls) {
 
-          const tool =
-            tools.find(
-              t =>
-                t.name ===
-                toolCall.name
-            );
+          const tool: any = tools.find(t => t.name === toolCall.name);
 
           if (!tool) {
             continue;
@@ -788,7 +1061,6 @@ export class AiService {
       //
       // Save report
       //
-      console.log("Saving Final Response: ", finalResponse);
       await this.aiRepo.saveReport(
         userId,
         "custom",

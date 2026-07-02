@@ -11,10 +11,12 @@ export class OllamaProvider implements IAiProvider {
   ) {
     this.model = new ChatOllama({
       model: modelName,
-      "think": false,
       temperature,
       baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
-    });
+      keepAlive: "1h",
+      // LangChain's native top-level request timeout property
+      timeout: 120_000, 
+    } as any);
   }
 
   getModel(): BaseChatModel {
