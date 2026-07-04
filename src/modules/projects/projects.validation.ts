@@ -3,7 +3,7 @@ import { z } from 'zod';
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
 export const createProjectSchema = z.object({
-  _id: z.string().regex(objectIdRegex),
+  _id: z.string().regex(objectIdRegex).optional().nullable(),
   name: z.string().min(1),
   code: z.string().min(1).toUpperCase(),
   description: z.string().optional(),
