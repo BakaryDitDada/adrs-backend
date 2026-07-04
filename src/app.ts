@@ -1,73 +1,75 @@
-// import dotenv from "dotenv";
-// dotenv.config();
-
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import morgan from "morgan";
+
 import { registerRoutes } from "./routes/index.js";
 import globalErrorHandler from "./utils/errorHandler.js";
-import './jobs/payrollReminder.js'; // Import the payroll reminder job to ensure it runs
-import './jobs/authCleanup.job.js'; // Import the auth cleanup job to ensure it runs
-import './jobs/docsCleanup.job.js'; // Import the documents cleanup job to ensure it runs
-
-// import logger from './utils/logger.js';
-// import userRouter from "./routes/userRoutes.js";
-// import taskRouter from "./routes/taskRoutes.js";
-// import employeeRouter from "./routes/employeeRoutes.js";
-// import payrollRouter from "./routes/payrollRoutes.js";
-// import leaveRouter from "./routes/leaveRoutes.js";
-// import projectRouter from "./routes/projectRoutes.js";
-// import { corsOptions } from "./config/corsOptions.js";
-// import { credentials } from "./middlewares/credentials.js";
-
-// Mount routers
-// const apiVersion = '/api/v1';
-
-// Define API paths
-// const apiUserPath = `${apiVersion}/users`;
-// const apiTaskPath = `${apiVersion}/tasks`;
-// const apiProjectPath = `${apiVersion}/projects`;
-// const apiEmployeePath = `${apiVersion}/employees`;
-// const apiPayrollPath = `${apiVersion}/payrolls`;
-// const apiLeavePath = `${apiVersion}/leaves`; // For future leave management routes
+import './jobs/payrollReminder.js';
+import './jobs/authCleanup.job.js';
+import './jobs/docsCleanup.job.js';
 
 const app: express.Application = express();
 
-// Middlewares
-app.use(helmet());
-// app.use(cors(corsOptions)); // Apply CORS with custom options
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://adrs-mali.com'] 
-    : ['http://localhost:3000'],
-  credentials: true
+/**
+ * 1. PROXY TRUST (Crucial for Enterprise Deployments)
+ * Tells Express to trust the X-Forwarded-For and X-Forwarded-Proto headers
+ * sent by Nginx, Cloudflare, or AWS ELB. Essential for cookie/credential validation.
+ */
+app.set('trust proxy', 1);
+
+/**
+ * 2. DYNAMIC CORS CONFIGURATION
+ * Instead of hardcoding arrays, pull from an environment variable.
+ * Provide an absolute fallback for development safety.
+ */
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:3000", "http://localhost:5173"]; // Added default Vite port too
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow server-to-server requests or tools like Postman (which don't send an Origin header)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS Policy Violation: Origin ${origin} is not allowed.`));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "X-XSRF-TOKEN"],
+  optionsSuccessStatus: 200 // Explicitly forces legacy browsers (IE11) to behave on 204 options
+};
+
+// 3. APPLY MIDDLEWARES (Corrected Order & Parameters)
+app.use(helmet({
+  // Relaxes Helmet's resource policy so your frontend can safely parse cross-origin elements
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
+// Apply CORS to all routes
+app.use(cors(corsOptions));
+
+// Explicitly handle pre-flight OPTIONS requests globally across all routes
+app.options("*", cors(corsOptions));
+
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-// app.use(credentials);
 
-// CORS POLICY SETTINGS
-// app.use(cors(corsOptions)); // Apply to ALL routes
-// app.options('*', cors(corsOptions)); // Important for upload endpoints
-
-// Use Morgan - Third Party Middleware
-if(process.env.NODE_ENV === 'development') {
+// Logging Middleware
+if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
 // Routes
 registerRoutes(app);
-// app.use(apiUserPath, userRouter);
-// app.use(apiTaskPath, taskRouter);
-// app.use(apiProjectPath, projectRouter);
-// app.use(apiEmployeePath, employeeRouter);
-// app.use(apiPayrollPath, payrollRouter);
-// app.use(apiLeavePath, leaveRouter); // For leave management
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -103,43 +105,17 @@ app.get('/', (_, res) => {
       <meta charset="UTF-8" />
       <title>ADRS API</title>
       <style>
-        body {
-          font-family: Arial, sans-serif;
-          background: #f4f6f8;
-          color: #2c3e50;
-          text-align: center;
-          padding: 50px;
-        }
-        h1 {
-          color: #1abc9c;
-          font-size: 2.5em;
-        }
-        p {
-          font-size: 1.2em;
-          margin: 10px 0;
-        }
-        .links {
-          margin-top: 20px;
-        }
-        a {
-          display: inline-block;
-          margin: 5px 10px;
-          padding: 10px 15px;
-          background: #1abc9c;
-          color: white;
-          text-decoration: none;
-          border-radius: 5px;
-          transition: background 0.3s;
-        }
-        a:hover {
-          background: #16a085;
-        }
+        body { font-family: Arial, sans-serif; background: #f4f6f8; color: #2c3e50; text-align: center; padding: 50px; }
+        h1 { color: #1abc9c; font-size: 2.5em; }
+        p { font-size: 1.2em; margin: 10px 0; }
+        .links { margin-top: 20px; }
+        a { display: inline-block; margin: 5px 10px; padding: 10px 15px; background: #1abc9c; color: white; text-decoration: none; border-radius: 5px; transition: background 0.3s; }
+        a:hover { background: #16a085; }
       </style>
     </head>
     <body>
       <h1>🚀 ADRS API is Running...</h1>
       <p>Welcome to the ADRS backend service.</p>
-      <p>Use the links below to explore endpoints and documentation.</p>
       <div class="links">
         <a href="/api/v1/users">Users Endpoint</a>
         <a href="/api/v1/docs">API Documentation</a>
@@ -153,7 +129,7 @@ app.get('/', (_, res) => {
   `);
 });
 
-// ERROR HANDLERS
+// 404 Fallback Handler
 app.use((_, res) => { 
   res.status(404).json({ 
     status: "Echec", 
@@ -161,6 +137,7 @@ app.use((_, res) => {
   }); 
 });
 
+// Global Error Handler
 app.use(globalErrorHandler);
 
 export default app;
