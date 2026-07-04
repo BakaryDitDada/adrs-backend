@@ -24,7 +24,7 @@ export class AiController {
     try {
 
       res.setHeader("Content-Type", "text/event-stream");
-      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
 
       // ADD THIS LINE: Tells Nginx / proxies not to buffer this response
