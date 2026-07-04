@@ -56,7 +56,7 @@ app.use(helmet({
 app.use(cors(corsOptions));
 
 // Explicitly handle pre-flight OPTIONS requests globally across all routes
-app.options("*", cors(corsOptions));
+app.options("/{*splat}", cors(corsOptions));
 
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
