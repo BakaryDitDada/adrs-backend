@@ -93,6 +93,7 @@ export class EmployeeService extends BaseService<IEmployee> {
 
   async deleteEmployee(id: string, userId: string): Promise<void> {
     // You might want to soft delete instead; adjust accordingly
+    void userId; // Currently not used, but can be logged or used for audit
     await this.deleteById(id);
   }
 

@@ -8,7 +8,6 @@ import {
   LeaveUpdateInput,
   LeaveApproveInput,
   LeaveFilter,
-  LeaveBalance,
 } from './leaves.types.js';
 
 import { ILeave } from './leaves.model.js';

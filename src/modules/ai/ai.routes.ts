@@ -8,7 +8,7 @@ import { LeavesRepository } from '../leaves/leaves.repository.js';
 import { ProjectRepository } from '../projects/projects.repository.js';
 import { TaskRepository } from '../tasks/tasks.repository.js';
 import { protect, restrictTo } from '../../middlewares/auth.middleware.js';
-import { validateChat, validateGenerateReport } from './ai.middleware.js';
+import { validateChat } from './ai.middleware.js';
 
 const aiRouter: Router = Router();
 

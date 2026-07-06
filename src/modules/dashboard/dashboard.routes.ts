@@ -4,13 +4,6 @@ import { DashboardService } from "./dashboard.service.js";
 import { DashboardRepository } from "./dashboard.repository.js";
 import { protect, restrictTo } from "../../middlewares/auth.middleware.js";
 
-import {
-  validateDashboardSummaryQuery,
-  validateDashboardOverviewQuery,
-  validateDashboardTrendQuery,
-  validateDashboardWorkloadQuery,
-} from "./dashboard.middleware.js";
-
 // Import models (adjust paths if needed)
 import Employee from "../employees/employees.model.js";
 import Leave from "../leaves/leaves.model.js";

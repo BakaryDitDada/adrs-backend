@@ -12,7 +12,7 @@ export class GeminiProvider implements IAiProvider {
       modelName,         // ✅ correct property name (NOT "model")
       temperature,
       maxOutputTokens: 2048, // optional but recommended
-    });
+    } as any);
   }
 
   getModel(): BaseChatModel {

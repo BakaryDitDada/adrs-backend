@@ -1,6 +1,6 @@
 import { PopulateOptions, Types } from 'mongoose';
 import { ProjectRepository } from './projects.repository.js';
-import { DocumentService } from '../documents/docs.service.js';
+// import { DocumentService } from '../documents/docs.service.js';
 import { ProjectCreateInput, ProjectUpdateInput, ProjectFilter } from './projects.types.js';
 import { ProjectBulkCreateInput } from './projects.validation.js';
 import AppError from '../../utils/appError.js';
@@ -10,7 +10,7 @@ import { BaseService } from '../base/base.service.js';
 export class ProjectService extends BaseService<IProject> {
   constructor(
     private repo: ProjectRepository,
-    private documentService: DocumentService
+    // private documentService: DocumentService
   ) {
     super(repo)
   }

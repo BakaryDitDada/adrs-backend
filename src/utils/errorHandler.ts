@@ -1,5 +1,4 @@
-import { ErrorRequestHandler, NextFunction, Request, Response } from "express";
-// import AppError from "../utils/appError.js";
+import { ErrorRequestHandler, Request, Response } from "express";
 import AppError from "./appError.js";
 
 const handleCastErrorDB = (err: any) => {
@@ -45,7 +44,7 @@ const sendProdError = (err: any, res: Response) => {
   }
 }
 
-const globalErrorHandler: ErrorRequestHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+const globalErrorHandler: ErrorRequestHandler = (err: any, _: Request | any, res: Response) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
@@ -53,7 +52,7 @@ const globalErrorHandler: ErrorRequestHandler = (err: any, req: Request, res: Re
     sendDevError(err, res);
   } else if(process.env.NODE_ENV === 'production') {
     let error = {...err};
-    let message = err.message;
+    // let message = err.message;
     if(error.name === 'CastError') error = handleCastErrorDB(error);
     if(error.code === 11000) error = handleDuplicateFieldsDB(error);
     if(error.name === 'ValidationError') error = handleValidationErrorDB(error);

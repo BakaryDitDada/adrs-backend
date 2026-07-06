@@ -1,7 +1,7 @@
 import { PopulateOptions, Types } from 'mongoose';
 import { TaskRepository } from './tasks.repository.js';
 import { ProjectRepository } from '../projects/projects.repository.js';
-import { DocumentService } from '../documents/docs.service.js';
+// import { DocumentService } from '../documents/docs.service.js';
 import { TaskBulkCreateInput } from './tasks.validation.js';
 
 import { sendTaskAssignmentEmails } from '../../services/email.service.js';
@@ -17,7 +17,7 @@ export class TaskService {
   constructor(
     private taskRepo: TaskRepository,
     private projectRepo: ProjectRepository,
-    private documentService: DocumentService,
+    // private documentService: DocumentService,
   ) {
     this.sendTaskAssignmentEmails = sendTaskAssignmentEmails; // Inject email function
   }

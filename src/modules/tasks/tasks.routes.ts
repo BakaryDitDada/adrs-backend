@@ -3,22 +3,22 @@ import { TaskController } from './tasks.controller.js';
 import { TaskService } from './tasks.service.js';
 import { TaskRepository } from './tasks.repository.js';
 import { ProjectRepository } from '../projects/projects.repository.js';
-import { DocumentService } from '../documents/docs.service.js';
-import { DocumentRepository } from '../documents/docs.repository.js';
+// import { DocumentService } from '../documents/docs.service.js';
+// import { DocumentRepository } from '../documents/docs.repository.js';
 
-import { FileStorageFactory } from '../../services/fileStorage/fileStorage.factory.js';
+// import { FileStorageFactory } from '../../services/fileStorage/fileStorage.factory.js';
 import { protect, restrictTo } from '../../middlewares/auth.middleware.js';
 import { validateTasksBulkCreate, validateTaskCreate, validateTasksBulkUpdate, validateTaskUpdate } from './tasks.middleware.js';
 
 const taskRouter: Router = Router();
 
 // Dependencies
-const docRepo = new DocumentRepository();
-const fileStorage = FileStorageFactory.create(process.env.FILE_STORAGE as any || 'disk');
-const docService = new DocumentService(docRepo, fileStorage);
+// const docRepo = new DocumentRepository();
+// const fileStorage = FileStorageFactory.create(process.env.FILE_STORAGE as any || 'disk');
+// const docService = new DocumentService(docRepo, fileStorage);
 const taskRepo = new TaskRepository();
 const projectRepo = new ProjectRepository();
-const taskService = new TaskService(taskRepo, projectRepo, docService);
+const taskService = new TaskService(taskRepo, projectRepo);
 const controller = new TaskController(taskService);
 
 taskRouter.use(protect);

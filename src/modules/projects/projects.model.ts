@@ -52,7 +52,7 @@ const projectSchema = new Schema<IProject>(
 );
 
 // Pre-find middleware to exclude soft-deleted projects
-projectSchema.pre(/^find/, function (this: mongoose.Query<any, IProject> | any, next: (err?: any) => void) {
+projectSchema.pre(/^find/, function (this: mongoose.Query<any, IProject> | any, _: (err?: any) => void) {
   // Only apply if 'this' is a Query (not a Document)
   if (typeof this.getFilter === 'function') {
     if (!this.getFilter().hasOwnProperty('isDeleted')) {

@@ -2,20 +2,20 @@ import { Router } from 'express';
 import { ProjectController } from './projects.controller.js';
 import { ProjectService } from './projects.service.js';
 import { ProjectRepository } from './projects.repository.js';
-import { DocumentService } from '../documents/docs.service.js';
-import { DocumentRepository } from '../documents/docs.repository.js';
-import { FileStorageFactory } from '../../services/fileStorage/fileStorage.factory.js';
+// import { DocumentService } from '../documents/docs.service.js';
+// import { DocumentRepository } from '../documents/docs.repository.js';
+// import { FileStorageFactory } from '../../services/fileStorage/fileStorage.factory.js';
 import { protect, restrictTo } from '../../middlewares/auth.middleware.js';
 import { validateProjectCreate, validateProjectUpdate, validateProjectsBulkCreate, validateProjectsBulkUpdate } from './projects.middleware.js';
 
 const projectsRouter: Router = Router();
 
 // Instantiate dependencies
-const docRepo = new DocumentRepository();
-const fileStorage = FileStorageFactory.create(process.env.FILE_STORAGE as any || 'disk');
-const docService = new DocumentService(docRepo, fileStorage);
+// const docRepo = new DocumentRepository();
+// const fileStorage = FileStorageFactory.create(process.env.FILE_STORAGE as any || 'disk');
+// const docService = new DocumentService(docRepo, fileStorage);
 const projectRepo = new ProjectRepository();
-const projectService = new ProjectService(projectRepo, docService);
+const projectService = new ProjectService(projectRepo);
 const controller = new ProjectController(projectService);
 
 projectsRouter.use(protect);

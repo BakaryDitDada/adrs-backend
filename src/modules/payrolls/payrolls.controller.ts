@@ -7,7 +7,7 @@ import AppError from '../../utils/appError.js';
 export class PayrollController {
   constructor(private payrollService: PayrollService) {}
 
-  createPayrollBatch = catchAsync(async (req: Request | any, res: Response, next: NextFunction) => {
+  createPayrollBatch = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
     const { employeeIds, payPeriodStart, payPeriodEnd, paymentDate, customData } = req.body;
     const creatorId = req.user?._id;
 
@@ -35,7 +35,7 @@ export class PayrollController {
     });
   });
 
-  getAllPayrolls = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  getAllPayrolls = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
     const { employeeId, status, fromDate, toDate, page, limit } = req.query;
     const filter = {
       employeeId: employeeId as string,
@@ -60,27 +60,27 @@ export class PayrollController {
     });
   });
 
-  getPayroll = catchAsync(async (req: Request | any, res: Response, next: NextFunction) => {
+  getPayroll = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
     const payroll = await this.payrollService.getPayrollById(req.params.id);
     res.status(200).json({ status: 'success', data: { payroll } });
   });
 
-  updatePayroll = catchAsync(async (req: Request | any, res: Response, next: NextFunction) => {
+  updatePayroll = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
     const updated = await this.payrollService.updatePayroll(req.params.id, req.body);
     res.status(200).json({ status: 'success', data: { payroll: updated } });
   });
 
-  batchUpdate = catchAsync(async (req: Request | any, res: Response, next: NextFunction) => {
+  batchUpdate = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
     const result = await this.payrollService.batchUpdate(req.body);
     res.status(200).json({ status: 'success', data: result });
   });
 
-  cancelPayroll = catchAsync(async (req: Request | any, res: Response, next: NextFunction) => {
+  cancelPayroll = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
     const cancelled = await this.payrollService.cancelPayroll(req.params.id);
     res.status(200).json({ status: 'success', message: 'Payroll cancelled', data: { payroll: cancelled } });
   });
 
-  batchCancel = catchAsync(async (req: Request | any, res: Response, next: NextFunction) => {
+  batchCancel = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
     const result = await this.payrollService.batchCancel(req.body);
     res.status(200).json({ status: 'success', data: result });
   });

@@ -2,7 +2,7 @@
 import { StateGraph, MessagesAnnotation } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { SystemMessage, HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
+import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 import { AiRepository } from './ai.repository.js';
 import { getSystemPrompt } from './prompts/system.prompts.js';
 import { getAllTools, injectRepositories } from './tools/index.js';

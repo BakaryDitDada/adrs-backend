@@ -5,19 +5,19 @@ import catchAsync from "../../utils/catchAsync.js";
 export class EmployeeController {
   constructor(private service: EmployeeService) {}
 
-  create = catchAsync(async (req: Request | any, res: Response, next: NextFunction) => {
+  create = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
     const userId = req.user._id; // `protect` guarantees user exists
     const employee = await this.service.createEmployee(req.body, userId);
     res.status(201).json({ status: "success", data: { employee } });
   });
 
-  bulkCreate = catchAsync(async (req: Request | any, res: Response, next: NextFunction) => {
+  bulkCreate = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
     const userId = req.user._id;
     const employees = await this.service.bulkCreateEmployees(req.body, userId);
     res.status(201).json({ status: "success", data: { employees } });
   });
 
-  list = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  list = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
     const page = req.query.page ? Number(req.query.page) : 1;
     const limit = req.query.limit ? Number(req.query.limit) : 10;
     const sort = req.query.sort as string | undefined;
@@ -41,7 +41,7 @@ export class EmployeeController {
     });
   });
 
-  advancedList = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  advancedList = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
     const page = req.query.page ? Number(req.query.page) : 1;
     const limit = req.query.limit ? Number(req.query.limit) : 10;
     const sort = req.query.sort as string | undefined;
@@ -77,24 +77,24 @@ export class EmployeeController {
     });
   });
 
-  get = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  get = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
     const employee = await this.service.getEmployee(req.params.id as string);
     res.status(200).json({ status: "success", data: { employee } });
   });
 
-  update = catchAsync(async (req: Request | any, res: Response, next: NextFunction) => {
+  update = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
     const userId = req.user._id;
     const employee = await this.service.updateEmployee(req.params.id as string, req.body, userId);
     res.status(200).json({ status: "success", data: { employee } });
   });
 
-  delete = catchAsync(async (req: Request | any, res: Response, next: NextFunction) => {
+  delete = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
     const userId = req.user._id;
     await this.service.deleteEmployee(req.params.id as string, userId);
     res.status(204).send();
   });
 
-  softDelete = catchAsync(async (req: Request | any, res: Response, next: NextFunction) => {
+  softDelete = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
     const userId = req.user._id;
     const employee = await this.service.softDeleteEmployee(req.params.id as string, userId);
     res.status(200).json({ status: "success", data: { employee } });
