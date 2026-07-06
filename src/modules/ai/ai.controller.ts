@@ -26,11 +26,13 @@ export class AiController {
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache, no-transform");
       res.setHeader("Connection", "keep-alive");
+      res.setHeader('Transfer-Encoding', 'chunked');
 
       // ADD THIS LINE: Tells Nginx / proxies not to buffer this response
       res.setHeader("X-Accel-Buffering", "no");
 
       res.flushHeaders();
+      res.removeHeader('Content-Length');
 
       res.write(
         `data: ${JSON.stringify({
