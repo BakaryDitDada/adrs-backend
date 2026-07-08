@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 import catchAsync from '../../utils/catchAsync.js'
 import { DashboardService } from './dashboard.service.js';
@@ -7,7 +7,7 @@ import { DashboardPeriod } from './dashboard.types.js';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  getSummary = catchAsync(async (_req: Request, res: Response) => {
+  getSummary = catchAsync(async (_req: Request, res: Response, _next: NextFunction) => {
     const data = await this.dashboardService.getSummary();
 
     res.status(200).json({
@@ -16,7 +16,7 @@ export class DashboardController {
     });
   });
 
-  getOverviewCharts = catchAsync(async (_req: Request, res: Response) => {
+  getOverviewCharts = catchAsync(async (_req: Request, res: Response, _next: NextFunction) => {
     const data = await this.dashboardService.getOverviewCharts();
 
     res.status(200).json({
@@ -25,7 +25,7 @@ export class DashboardController {
     });
   });
 
-  getTrendCharts = catchAsync(async (req: Request, res: Response) => {
+  getTrendCharts = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const period = (req.query.period as DashboardPeriod) || '12m';
 
     const data = await this.dashboardService.getTrendCharts(period);
@@ -36,7 +36,7 @@ export class DashboardController {
     });
   });
 
-  getWorkloadCharts = catchAsync(async (req: Request, res: Response) => {
+  getWorkloadCharts = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const period = (req.query.period as DashboardPeriod) || '12m';
     const limit = Number(req.query.limit) || 10;
 

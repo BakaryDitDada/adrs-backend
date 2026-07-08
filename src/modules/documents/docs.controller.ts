@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { DocumentService } from './docs.service.js';
 import catchAsync from '../../utils/catchAsync.js';
 import AppError from '../../utils/appError.js';
@@ -6,7 +6,7 @@ import AppError from '../../utils/appError.js';
 export class DocumentController {
   constructor(private service: DocumentService) {}
 
-  upload = catchAsync(async (req: Request | any, res: Response) => {
+  upload = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const file = req.file;
     if (!file) throw new AppError('No file uploaded', 400);
     const { relatedModel, relatedId } = req.body;
@@ -18,7 +18,7 @@ export class DocumentController {
     res.status(201).json({ status: 'success', data: { document: doc } });
   });
 
-  uploadMany = catchAsync(async (req: Request | any, res: Response) => {
+  uploadMany = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const files = req.files as Express.Multer.File[];
     if (!files || files.length === 0) {
       throw new AppError('No files uploaded', 400);
@@ -38,7 +38,7 @@ export class DocumentController {
     });
   });
 
-  getAll = catchAsync(async (req: Request, res: Response) => {
+  getAll = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const { relatedModel, relatedId, page, limit } = req.query;
     const result = await this.service.getDocuments({
       relatedModel: relatedModel as string,
@@ -58,7 +58,7 @@ export class DocumentController {
     });
   });
 
-  search = catchAsync(async (req: Request, res: Response) => {
+  search = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const page = req.query.page ? Number(req.query.page) : 1;
     const limit = req.query.limit ? Number(req.query.limit) : 10;
     const sort = req.query.sort as string | undefined;
@@ -81,23 +81,23 @@ export class DocumentController {
     });
   });
 
-  getOne = catchAsync(async (req: Request | any, res: Response) => {
+  getOne = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const doc = await this.service.getDocumentById(req.params.id);
     res.status(200).json({ status: 'success', data: { document: doc } });
   });
 
-  delete = catchAsync(async (req: Request | any, res: Response) => {
+  delete = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.deleteDocument(req.params.id);
     res.status(204).send();
   });
 
-  deleteMany = catchAsync(async (req: Request | any, res: Response) => {
+  deleteMany = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const ids: string[] = req.body.ids;
     await this.service.deleteDocuments(ids);
     res.status(204).send();
   });
 
-  downloadById = catchAsync(async (req: Request, res: Response) => {
+  downloadById = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const { id } = req.params;
     const file = await this.service.getFileForDownload(String(id), 'id');
 
@@ -109,7 +109,7 @@ export class DocumentController {
     });
   });
 
-  downloadByFilename = catchAsync(async (req: Request, res: Response) => {
+  downloadByFilename = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const { filename } = req.params;
     const file = await this.service.getFileForDownload(String(filename), "filename");
 

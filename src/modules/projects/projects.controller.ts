@@ -6,7 +6,7 @@ import { Types } from 'mongoose';
 export class ProjectController {
   constructor(private service: ProjectService) {}
 
-  create = catchAsync(async (req: Request | any, res: Response) => {
+  create = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const projectData = {
       ...req.body,
       manager: new Types.ObjectId(req.body.manager),
@@ -23,7 +23,7 @@ export class ProjectController {
   });
 
    // --- Bulk Create Projects ---
-  createMany = catchAsync(async (req: Request | any, res: Response | any) => {
+  createMany = catchAsync(async (req: Request | any, res: Response | any, _next: NextFunction) => {
     const { projects } = req.body;
 
     if (!projects || !Array.isArray(projects) || projects.length === 0) {
@@ -57,7 +57,7 @@ export class ProjectController {
     });
   });
 
-  getAll = catchAsync(async (req: Request, res: Response) => {
+  getAll = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const { status, manager, fromDate, toDate, page, limit } = req.query;
     const result = await this.service.getProjects({
       status: status as string,
@@ -79,7 +79,7 @@ export class ProjectController {
     });
   }); 
 
-  list = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
+  list = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const page = req.query.page ? Number(req.query.page) : 1;
     const limit = req.query.limit ? Number(req.query.limit) : 10;
     const sort = req.query.sort as string | undefined;
@@ -103,12 +103,12 @@ export class ProjectController {
     });
   });
 
-  getOne = catchAsync(async (req: Request | any, res: Response) => {
+  getOne = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const project = await this.service.getProjectById(req.params.id);
     res.status(200).json({ status: 'success', data: { project } });
   });
 
-  update = catchAsync(async (req: Request | any, res: Response) => {
+  update = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const updates = { ...req.body };
     if (updates.startDate) updates.startDate = new Date(updates.startDate);
     if (updates.endDate) updates.endDate = new Date(updates.endDate);
@@ -125,7 +125,7 @@ export class ProjectController {
 
   });
 
-  updateMany = catchAsync(async (req: Request | any, res: Response | any) => {
+  updateMany = catchAsync(async (req: Request | any, res: Response | any, _next: NextFunction) => {
     const { projects } = req.body;
 
     if (!projects || !Array.isArray(projects) || projects.length === 0) {
@@ -169,35 +169,35 @@ export class ProjectController {
     });
   });
 
-  delete = catchAsync(async (req: Request | any, res: Response) => {
+  delete = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.deleteProject(req.params.id);
     res.status(204).send();
   });
 
-  softDelete = catchAsync(async (req: Request | any, res: Response) => {
+  softDelete = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.softDeleteProject(req.params.id);
     res.status(204).send();
   });
 
-  deleteMany = catchAsync(async (req: Request | any, res: Response) => {
+  deleteMany = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.deleteProjects(req.body.ids);
 
     res.status(204).send();
   })
 
-  softDeleteMany = catchAsync(async (req: Request | any, res: Response) => {
+  softDeleteMany = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.softDeleteProjects(req.body.ids);
 
     res.status(204).send();
   })
 
-  addAttachment = catchAsync(async (req: Request | any, res: Response) => {
+  addAttachment = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const { documentId } = req.body;
     const project = await this.service.addAttachment(req.params.id, documentId);
     res.status(200).json({ status: 'success', data: { project } });
   });
 
-  removeAttachment = catchAsync(async (req: Request | any, res: Response) => {
+  removeAttachment = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const project = await this.service.removeAttachment(req.params.id, req.params.documentId);
     res.status(200).json({ status: 'success', data: { project } });
   });

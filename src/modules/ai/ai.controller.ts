@@ -1,12 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 import { AiService } from './ai.service.js';
 import catchAsync from '../../utils/catchAsync.js';
-// import AppError from '../../utils/appError.js';
 
 export class AiController {
   constructor(private service: AiService) {}
 
-  chat = catchAsync(async (req: Request | any, res: Response) => {
+  chat = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const userId = req.user._id;
     const userRole = req.user.role;
     const { conversationId, message } = req.body;
@@ -16,7 +15,8 @@ export class AiController {
 
   streamChat = async (
     req: Request | any,
-    res: Response
+    res: Response,
+    _next: NextFunction
   ) => {
 
     // return console.log("Req.body ::: ", req.body);
@@ -117,19 +117,19 @@ export class AiController {
     }
   };
 
-  getConversations = catchAsync(async (req: Request | any, res: Response) => {
+  getConversations = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const userId = req.user._id;
     const conversations = await this.service.listConversations(userId);
     res.status(200).json({ status: 'success', data: { conversations } });
   });
 
-  getConversationHistory = catchAsync(async (req: Request | any, res: Response) => {
+  getConversationHistory = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const userId = req.user._id;
     const messages = await this.service.getConversationHistory(userId, req.params.id);
     res.status(200).json({ status: 'success', data: { messages } });
   });
 
-  generateReport = catchAsync(async (req: Request | any, res: Response) => {
+  generateReport = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const userId = req.user._id;
     const userRole = req.user.role;
     const { query } = req.body;
@@ -174,83 +174,15 @@ export class AiController {
     // res.status(200).json({ status: 'success', data: { manualReport } });
   });
   
-  deleteConversation = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+  deleteConversation = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.deleteConversation(req.params.id as string);
     res.status(204).send();
   });
 
-  /*
-   @Post("/reports/stream")
-  */
-  // streamReport = async (
-  //   req: Request | any,
-  //   res: Response
-  // ) => {
-
-  //   try {
-
-  //     res.setHeader(
-  //       "Content-Type",
-  //       "text/event-stream"
-  //     );
-
-  //     res.setHeader(
-  //       "Cache-Control",
-  //       "no-cache"
-  //     );
-
-  //     res.setHeader(
-  //       "Connection",
-  //       "keep-alive"
-  //     );
-
-  //     res.flushHeaders();
-
-  //     const stream =
-  //       this.service
-  //         .generateFlexibleReportStream(
-  //           req.user._id,
-  //           req.user.role,
-  //           req.body.query
-  //         );
-
-  //     for await (
-  //       const event of stream
-  //     ) {
-
-  //       console.log("Stream Event::: ", event)
-
-  //       res.write(
-  //         `data: ${JSON.stringify(
-  //           event
-  //         )}\n\n`
-  //       );
-  //     }
-
-  //     res.end();
-
-  //   } catch(error: any) {
-
-  //     console.error(error);
-
-  //     if (!res.writableEnded) {
-
-  //       res.write(
-  //         `data: ${JSON.stringify({
-  //           type: "error",
-  //           message:
-  //             error.message
-  //         })}\n\n`
-  //       );
-
-  //       res.end();
-  //     }
-  //   }
-  // };
-
   streamReport = async (
     req: Request | any,
-    res: Response
+    res: Response,
+    _next: NextFunction
   ) => {
 
     try {
@@ -314,13 +246,13 @@ export class AiController {
     }
   };
 
-  getReports = catchAsync(async (req: Request | any, res: Response) => {
+  getReports = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const userId = req.user._id;
     const reports = await this.service.getUserReports(userId);
     res.status(200).json({ status: 'success', data: { reports } });
   });
 
-  deleteReport = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+  deleteReport = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.deleteReport(req.params.id as string);
     res.status(204).send();
   });

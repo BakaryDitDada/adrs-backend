@@ -5,18 +5,18 @@ import { Request, Response, NextFunction } from "express";
 export class UserController {
   constructor(private service: UserService) {}
 
-  create = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
+  create = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     console.log("Creating A User with role ::: ", req.body);
     const user = await this.service.create(req.body);
     res.status(201).json({ status: "success", data: { user } });
   });
 
-  bulkCreate = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
+  bulkCreate = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const users = await this.service.bulkCreateUsers(req.body);
     res.status(201).json({ status: "success", data: { users } });
   });
 
-  list = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
+  list = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const page = req.query.page ? Number(req.query.page) : 1;
     const limit = req.query.limit ? Number(req.query.limit) : 10;
     const sort = req.query.sort as string | undefined;
@@ -44,18 +44,18 @@ export class UserController {
     res.status(200).json({ status: "success", data: { user } });
   });
 
-  getMyInfo = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+  getMyInfo = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const user = await this.service.findById(req.user.id as string);
     res.status(200).json({ status: "success", data: { user } });
   });
 
-  getOne = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
+  getOne = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const filters = { ...req.query };
     const user = await this.service.findOne(filters);
     res.status(200).json({ status: "success", data: { user } });
   });
 
-  update = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
+  update = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const { email, password, ...updates } = req.body; // Prevent email and password updates here
     const user = await this.service.updateById(req.params.id as string, updates);
     res.status(200).json({ status: "success", data: { user } });
@@ -116,7 +116,7 @@ export class UserController {
     return res.status(200).json({ status: "success", data: { user } });
   });
 
-  disableMyAccount = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+  disableMyAccount = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.updateById(req.user.id as string, { active: false });
     res.status(204).send();
   });
@@ -127,7 +127,7 @@ export class UserController {
   //   res.status(200).json({ status: "success", data: { user } });
   // });
 
-  delete = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
+  delete = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     await this.service.deleteById(req.params.id as string);
     res.status(204).send();
   });

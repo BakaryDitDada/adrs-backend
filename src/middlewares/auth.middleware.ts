@@ -14,8 +14,19 @@ export const protect = catchAsync(async (req: any, res: Response, next: NextFunc
   if (!token) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
+  
+  let decoded: any;
 
-  const decoded: any = service.verifyAccessToken(token);
+  // const decoded: any = service.verifyAccessToken(token);
+  try {
+    decoded = service.verifyAccessToken(token);
+  } catch (err:any) {
+    if(err.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token expired'});
+    } else {
+      return res.status(401).json({ message: 'Unauthorized: invalid token'});
+    }
+  }
 
   const user = await User.findById(decoded.id);
 

@@ -7,6 +7,7 @@ import {
 } from '../../services/email.service.js';
 import { BaseService } from '../base/base.service.js';
 import { IUser } from '../users/users.model.js';
+import AppError from '../../utils/appError.js';
 
 export class AuthService extends BaseService<IUser | any> {
   constructor(
@@ -73,29 +74,53 @@ export class AuthService extends BaseService<IUser | any> {
   }
 
   async refresh(token: string) {
-    const decoded: any = this.tokenService.verifyRefreshToken(token);
-    
-    const hashed = this.crypto.hash(token);
-    
-    const user = await this.repo.findByRefreshToken(hashed);
-    
-    if (!user || user._id.toString() !== decoded.id) {
-      throw new Error("Token de rafraîchissement invalide");
+
+    // 1. Guard Clause: If no token provided, fail immediatly!
+    if (!token) {
+      console.warn("Refresh token missing from the request.");
+      throw new AppError("Token de rafraîchissement requis", 401);
     }
 
-    const accessToken = this.tokenService.generateAccessToken(user.id);
-    // const tokens = this.generateTokens(user.id);
+    try {
+      const decoded: any = this.tokenService.verifyRefreshToken(token);
+      
+      const hashed = this.crypto.hash(token);
+      const user = await this.repo.findByRefreshToken(hashed);
+      
+      if (!user || user._id.toString() !== decoded.id) {
+        throw new AppError("Token de rafraîchissement invalide ou expiré", 401);
+      }
+  
+      const accessToken = this.tokenService.generateAccessToken(user.id);
+  
+      return { access_token: accessToken, user };
 
-    return { access_token: accessToken, user };
+    } catch(err) {
+      console.log("An error occurred during the refresh process:", err)
+      throw new AppError("Session expirée, veuillez vous re-connecter", 401);
+    }
   }
 
   async logout(refreshToken: string) {
-    const hashed = this.crypto.hash(refreshToken);
-    const user = await this.repo.findByRefreshToken(hashed);
-
-    if (user) {
-      await this.repo.clearRefreshToken(user.id);
+    // 1. Guard Clause: Handle undefined, null, or empty string
+    if (!refreshToken) {
+      console.warn("Logout attempted with missing refresh token.");
+      return; // Return early. They are already logged out.
     }
+
+    try {
+      const hashed = this.crypto.hash(refreshToken);
+
+      const user = await this.repo.findByRefreshToken(hashed);
+
+      if (user) {
+        await this.repo.clearRefreshToken(user.id);
+      }
+
+    } catch(err) {
+      console.log("An error occurred during the logout process:", err)
+    }
+
   }
 
   async forgotPassword (data: { email: string, frontendURL: string}){

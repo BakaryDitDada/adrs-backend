@@ -6,7 +6,7 @@ import { Types } from 'mongoose';
 export class TaskController {
   constructor(private service: TaskService) {}
 
-  create = catchAsync(async (req: Request | any, res: Response) => {
+  create = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const taskData = {
       ...req.body,
       assignedTo: req.body.assignedTo?.map((id: string) => new Types.ObjectId(id)),
@@ -21,7 +21,7 @@ export class TaskController {
     res.status(201).json({ status: 'success', data: { task } });
   });
 
-  createMany = catchAsync(async (req: Request | any, res: Response | any) => {
+  createMany = catchAsync(async (req: Request | any, res: Response | any, _next: NextFunction) => {
     const { tasks } = req.body;
 
     if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
@@ -53,7 +53,7 @@ export class TaskController {
     });
   });
 
-  getAll = catchAsync(async (req: Request, res: Response) => {
+  getAll = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const { status, assignedTo, projectId, fromDate, toDate, page, limit } = req.query;
     const result = await this.service.getTasks({
       status: status as string,
@@ -112,7 +112,7 @@ export class TaskController {
     });
   });
 
-  getTasksByEmployee = catchAsync(async (req: Request, res: Response) => {
+  getTasksByEmployee = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const { id } = req.params;
     const { page, limit } = req.query;
 
@@ -128,12 +128,12 @@ export class TaskController {
     });
   });
 
-  getById = catchAsync(async (req: Request | any, res: Response) => {
+  getById = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const task = await this.service.getTaskById(req.params.id);
     res.status(200).json({ status: 'success', data: task });
   });
 
-  update = catchAsync(async (req: Request | any, res: Response) => {
+  update = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const updates = { ...req.body };
     if (updates.startDate) updates.startDate = new Date(updates.startDate);
     if (updates.dueDate) updates.dueDate = new Date(updates.dueDate);
@@ -141,7 +141,7 @@ export class TaskController {
     res.status(200).json({ status: 'success', data: { task } });
   });
 
-  updateMany = catchAsync(async (req: Request | any, res: Response | any) => {
+  updateMany = catchAsync(async (req: Request | any, res: Response | any, _next: NextFunction) => {
     const { tasks } = req.body;
 
     if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
@@ -185,36 +185,36 @@ export class TaskController {
     });
   });
 
-  delete = catchAsync(async (req: Request | any, res: Response) => {
+  delete = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.deleteTask(req.params.id);
     res.status(204).send();
   });
 
-  softDelete = catchAsync(async (req: Request | any, res: Response) => {
+  softDelete = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.softDeleteTask(req.params.id);
 
     res.status(204).send();
   })
 
-  deleteMany = catchAsync(async (req: Request | any, res: Response) => {
+  deleteMany = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.deleteTasks(req.body.ids);
 
     res.status(204).send();
   })
 
-  softDeleteMany = catchAsync(async (req: Request | any, res: Response) => {
+  softDeleteMany = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     await this.service.softDeleteTasks(req.params.ids);
 
     res.status(204).send();
   })
 
-  addAttachment = catchAsync(async (req: Request | any, res: Response) => {
+  addAttachment = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const { documentId } = req.body;
     const task = await this.service.addAttachment(req.params.id, documentId);
     res.status(200).json({ status: 'success', data: { task } });
   });
 
-  removeAttachment = catchAsync(async (req: Request | any, res: Response) => {
+  removeAttachment = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const task = await this.service.removeAttachment(req.params.id, req.params.documentId);
     res.status(200).json({ status: 'success', data: { task } });
   });

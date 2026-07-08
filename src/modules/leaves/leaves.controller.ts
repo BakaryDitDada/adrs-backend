@@ -7,7 +7,7 @@ import { Types } from 'mongoose';
 export class LeavesController {
   constructor(private leavesService: LeavesService) {}
 
-  create = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+  create = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const userId = req.user._id;
     const { employeeId, type, startDate, endDate, reason, status } = req.body;
     const leave = await this.leavesService.createLeaveRequest({
@@ -22,7 +22,7 @@ export class LeavesController {
     res.status(201).json({ status: 'success', data: { leaveRequest: leave } });
   });
 
-  createMany = catchAsync(async (req: Request | any, res: Response | any) => {
+  createMany = catchAsync(async (req: Request | any, res: Response | any, _next: NextFunction) => {
     const { leaves } = req.body;
 
     if (!leaves || !Array.isArray(leaves) || leaves.length === 0) {
@@ -54,7 +54,7 @@ export class LeavesController {
     });
   });
 
-  getAll = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
+  getAll = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const { employeeId, status, fromDate, toDate, page, limit } = req.query;
     const filter = {
       employeeId: employeeId as string,
@@ -77,7 +77,7 @@ export class LeavesController {
     });
   });
 
-  advancedList = catchAsync(async (req: Request, res: Response, _: NextFunction) => {
+  advancedList = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const page = req.query.page ? Number(req.query.page) : 1;
     const limit = req.query.limit ? Number(req.query.limit) : 10;
     const sort = req.query.sort as string | undefined;
@@ -113,7 +113,7 @@ export class LeavesController {
     });
   });
 
-  getLeavesByEmployee = catchAsync(async (req: Request, res: Response) => {
+  getLeavesByEmployee = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const { id } = req.params;
     const { page, limit } = req.query;
 
@@ -129,12 +129,12 @@ export class LeavesController {
     });
   });
 
-  getOne = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+  getOne = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const leave = await this.leavesService.getLeaveById(req.params.id);
     res.status(200).json({ status: 'success', data: { leaveRequest: leave } });
   });
 
-  update = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+  update = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const userId = req.user._id;
     const userRole = req.user.role;
     const updated = await this.leavesService.updateLeaveRequest(
@@ -146,7 +146,7 @@ export class LeavesController {
     res.status(200).json({ status: 'success', data: { leaveRequest: updated } });
   });
 
-  updateMany = catchAsync(async (req: Request | any, res: Response | any) => {
+  updateMany = catchAsync(async (req: Request | any, res: Response | any, _next: NextFunction) => {
     const { leaves } = req.body;
 
     if (!leaves || !Array.isArray(leaves) || leaves.length === 0) {
@@ -199,7 +199,7 @@ export class LeavesController {
     });
   });
 
-  approve = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+  approve = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const { id } = req.params;
     const userId = req.user._id;
     const result = await this.leavesService.approveLeaveRequest(id, req.body, userId);
@@ -207,14 +207,14 @@ export class LeavesController {
     res.status(200).json({ status: 'success', message, data: { leaveRequest: result } });
   });
 
-  cancel = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+  cancel = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const userId = req.user._id;
     const userRole = req.user.role;
     const cancelled = await this.leavesService.cancelLeaveRequest(req.params.id, userId, userRole);
     res.status(200).json({ status: 'success', message: 'Leave request cancelled', data: { leaveRequest: cancelled } });
   });
 
-  cancelMany = catchAsync(async (req: Request | any, res: Response | any) => {
+  cancelMany = catchAsync(async (req: Request | any, res: Response | any, _next: NextFunction) => {
     const { ids } = req.body;
     const userId = req.user._id;
     const userRole = req.user.role;
@@ -236,13 +236,13 @@ export class LeavesController {
     });
   });
 
-  hardDelete = catchAsync(async (req: Request | any, res: Response, _: NextFunction) => {
+  hardDelete = catchAsync(async (req: Request | any, res: Response, _next: NextFunction) => {
     const userRole = req.user.role;
     await this.leavesService.hardDeleteLeaveRequest(req.params.id, userRole);
     res.status(200).json({ status: 'success', message: 'Leave request permanently deleted' });
   });
 
-  hardDeleteMany = catchAsync(async (req: Request | any, res: Response | any) => {
+  hardDeleteMany = catchAsync(async (req: Request | any, res: Response | any, _next: NextFunction) => {
     const { ids } = req.body;
     const userRole = req.user.role;
 
